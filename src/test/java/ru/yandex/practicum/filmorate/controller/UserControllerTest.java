@@ -2,87 +2,91 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@SpringBootTest
+@AutoConfigureMockMvc
 class UserControllerTest {
     private UserController userController;
 
-    @BeforeEach
-    void setUp() {
-        userController = new UserController();
-    }
+    @Autowired
+    private MockMvc mockMvc;
 
     // Проверяет создание пользователя с валидными данными
     @Test
-    void shouldCreateUserWithValidData() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("validLogin");
-        user.setBirthday(LocalDate.of(2025, 1, 1));
+    void shouldCreateUserWithValidData() throws Exception {
+        String validUserJson = "{ \"email\": \"test@mail.ru\", \"login\": \"validLogin\", \"birthday\": \"2025-01-01\" }";
 
-        User createdUser = userController.createUser(user);
-
-        assertNotNull(createdUser.getId(), "Должен создаваться пользователь с ID");
-        assertEquals("validLogin", createdUser.getLogin(), "Логин должен сохраняться");
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                        .contentType("application/json")
+                        .content(validUserJson))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.login").value("validLogin"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
     }
 
     // Проверяет замену пустого имени на логин
     @Test
-    void shouldUseLoginAsNameWhenNameIsEmpty() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("testLogin");
-        user.setName("");
-        user.setBirthday(LocalDate.of(2025, 1, 1));
+    void shouldUseLoginAsNameWhenNameIsEmpty() throws Exception {
+        String userJson = "{ \"email\": \"test@mail.ru\", \"login\": \"testLogin\", \"name\": \"\", \"birthday\": \"2025-01-01\" }";
 
-        User createdUser = userController.createUser(user);
-
-        assertEquals("testLogin", createdUser.getName(),
-                "При пустом имени должен использоваться логин");
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                        .contentType("application/json")
+                        .content(userJson))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("testLogin"));
     }
 
     // Проверяет валидацию email
     @Test
-    void shouldRejectInvalidEmailFormat() {
-        User user = new User();
-        user.setEmail("invalid-email");
-        user.setLogin("validLogin");
-        user.setBirthday(LocalDate.of(2025, 1, 1));
+    void shouldRejectInvalidEmailFormat() throws Exception {
+        String invalidUserJson = "{ \"email\": \"invalid-email\", \"login\": \"validLogin\", \"birthday\": \"2025-01-01\" }";
 
-        assertThrows(ValidationException.class,
-                () -> userController.createUser(user),
-                "Должна быть ошибка при невалидном email");
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                        .contentType("application/json")
+                        .content(invalidUserJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.email")
+                        .value("Email должен быть валидным"));
     }
 
     // Проверяет валидацию логина с пробелами
     @Test
-    void shouldRejectLoginWithSpaces() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("invalid login");
-        user.setBirthday(LocalDate.of(2025, 1, 1));
+    void shouldRejectLoginWithSpaces() throws Exception {
+        String invalidUserJson = "{ \"email\": \"test@mail.ru\", \"login\": \"invalid login\", \"birthday\": \"2025-01-01\" }";
 
-        assertThrows(ValidationException.class,
-                () -> userController.createUser(user),
-                "Должна быть ошибка при логине с пробелами");
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                        .contentType("application/json")
+                        .content(invalidUserJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.login")
+                        .value("Логин не может содержать пробелы"));
     }
 
     // Проверяет обновление несуществующего пользователя
     @Test
-    void shouldThrowExceptionWhenUpdatingNonExistentUser() {
-        User user = new User();
-        user.setId(999L);
-        user.setEmail("test@mail.ru");
-        user.setLogin("validLogin");
-        user.setBirthday(LocalDate.of(2025, 1, 1));
+    void shouldThrowExceptionWhenUpdatingNonExistentUser() throws Exception {
+        String userJson = "{ \"id\": 999, \"email\": \"test@mail.ru\", " +
+                "\"login\": \"validLogin\", \"birthday\": \"2025-01-01\" }";
 
-        assertThrows(ValidationException.class,
-                () -> userController.updateUser(user),
-                "Должна быть ошибка при обновлении несуществующего пользователя");
+        mockMvc.perform(MockMvcRequestBuilders.put("/users")
+                        .contentType("application/json")
+                        .content(userJson))
+                .andExpect(status().isNotFound()) // Ожидаем статус 404
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                        .value("Пользователь с id=999 не найден"));
     }
 }
