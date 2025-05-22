@@ -48,4 +48,11 @@ public class InMemoryUserStorage implements UserStorage {
         log.info("Обновлен пользователь: ID={}", user.getId());
         return user;
     }
+
+    @Override
+    public void clear() {
+        users.clear();
+        idCounter = 1;
+        log.info("Хранилище пользователей очищено");
+    }
 }

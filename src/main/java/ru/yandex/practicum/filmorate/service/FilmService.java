@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -43,7 +44,10 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
-        return filmStorage.updateFilm(film);
+        log.debug("Запрос на обновление фильма с ID: {}", film.getId());
+        Film updatedFilm = filmStorage.updateFilm(film);
+        log.info("Фильм обновлён: ID={}, Название={}", updatedFilm.getId(), updatedFilm.getName());
+        return updatedFilm;
     }
 
     public void addLike(long filmId, long userId) {
@@ -57,6 +61,7 @@ public class FilmService {
         }
 
         film.getLikes().add(userId);
+        filmStorage.updateFilm(film);
         log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
@@ -64,9 +69,10 @@ public class FilmService {
         Film film = filmStorage.getFilmById(filmId);
 
         if (!film.getLikes().remove(userId)) {
-            throw new ValidationException("Пользователь не ставил лайк этому фильму");
+            throw new NotFoundException("Пользователь не ставил лайк этому фильму");
         }
 
+        filmStorage.updateFilm(film);
         log.info("Пользователь {} удалил лайк с фильма {}", userId, filmId);
     }
 

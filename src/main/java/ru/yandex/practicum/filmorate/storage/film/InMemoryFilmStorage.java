@@ -55,4 +55,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         log.info("Обновлен фильм: ID={}", film.getId());
         return film;
     }
+
+    @Override
+    public void clear() {
+        films.clear();
+        idCounter = 1;
+        log.info("Хранилище фильмов очищено");
+    }
 }

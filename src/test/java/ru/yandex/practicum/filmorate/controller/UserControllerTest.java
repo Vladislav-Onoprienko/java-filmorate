@@ -1,21 +1,12 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.User;
-
-import java.time.LocalDate;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -30,12 +21,12 @@ class UserControllerTest {
     void shouldCreateUserWithValidData() throws Exception {
         String validUserJson = "{ \"email\": \"test@mail.ru\", \"login\": \"validLogin\", \"birthday\": \"2025-01-01\" }";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+        mockMvc.perform(post("/users")
                         .contentType("application/json")
                         .content(validUserJson))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.login").value("validLogin"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
+                .andExpect(jsonPath("$.login").value("validLogin"))
+                .andExpect(jsonPath("$.id").exists());
     }
 
     // Проверяет замену пустого имени на логин
@@ -43,11 +34,11 @@ class UserControllerTest {
     void shouldUseLoginAsNameWhenNameIsEmpty() throws Exception {
         String userJson = "{ \"email\": \"test@mail.ru\", \"login\": \"testLogin\", \"name\": \"\", \"birthday\": \"2025-01-01\" }";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+        mockMvc.perform(post("/users")
                         .contentType("application/json")
                         .content(userJson))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("testLogin"));
+                .andExpect(jsonPath("$.name").value("testLogin"));
     }
 
     // Проверяет валидацию email
@@ -55,11 +46,11 @@ class UserControllerTest {
     void shouldRejectInvalidEmailFormat() throws Exception {
         String invalidUserJson = "{ \"email\": \"invalid-email\", \"login\": \"validLogin\", \"birthday\": \"2025-01-01\" }";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+        mockMvc.perform(post("/users")
                         .contentType("application/json")
                         .content(invalidUserJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.email")
+                .andExpect(jsonPath("$.email")
                         .value("Email должен быть валидным"));
     }
 
@@ -68,11 +59,11 @@ class UserControllerTest {
     void shouldRejectLoginWithSpaces() throws Exception {
         String invalidUserJson = "{ \"email\": \"test@mail.ru\", \"login\": \"invalid login\", \"birthday\": \"2025-01-01\" }";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+        mockMvc.perform(post("/users")
                         .contentType("application/json")
                         .content(invalidUserJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.login")
+                .andExpect(jsonPath("$.login")
                         .value("Логин не может содержать пробелы"));
     }
 
@@ -82,11 +73,11 @@ class UserControllerTest {
         String userJson = "{ \"id\": 999, \"email\": \"test@mail.ru\", " +
                 "\"login\": \"validLogin\", \"birthday\": \"2025-01-01\" }";
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/users")
+        mockMvc.perform(put("/users")
                         .contentType("application/json")
                         .content(userJson))
                 .andExpect(status().isNotFound()) // Ожидаем статус 404
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                .andExpect(jsonPath("$.message")
                         .value("Пользователь с id=999 не найден"));
     }
 }
