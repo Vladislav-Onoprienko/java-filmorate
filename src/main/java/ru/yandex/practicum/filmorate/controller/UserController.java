@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -29,7 +30,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable long id) {
+    public User getUserById(@PathVariable @Positive long id) {
         log.info("Запрошен пользователь с ID: {}", id);
         User user = userService.getUserById(id);
         log.debug("Найден пользователь: ID={}, Email={}", user.getId(), user.getEmail());
@@ -37,13 +38,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends")
-    public List<User> getFriends(@PathVariable long id) {
+    public List<User> getFriends(@PathVariable @Positive long id) {
         log.info("Запрос друзей пользователя с ID: {}", id);
         return userService.getFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
+    public List<User> getCommonFriends(@PathVariable @Positive long id, @PathVariable @Positive long otherId) {
         log.info("Запрос общих друзей пользователя {} c пользователем {}", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
@@ -65,14 +66,14 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable long id, @PathVariable long friendId) {
+    public void addFriend(@PathVariable @Positive long id, @PathVariable @Positive long friendId) {
         log.info("Запрос на добавление в друзья. Пользователь {} добавляет {}", id, friendId);
         userService.addFriend(id, friendId);
         log.info("Пользователи {} и {} теперь друзья", id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable long id, @PathVariable long friendId) {
+    public void removeFriend(@PathVariable @Positive long id, @PathVariable @Positive long friendId) {
         log.info("Запрос от пользователя с ID {} на удаление из друзей пользователя с ID {}", id, friendId);
         userService.removeFriend(id, friendId);
         log.info("Дружба прекращена: пользователь {} и {}", id, friendId);

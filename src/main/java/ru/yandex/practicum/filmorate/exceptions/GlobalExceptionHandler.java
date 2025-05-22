@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.exceptions;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,16 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
         String errorMessage = e.getBindingResult().getAllErrors().stream()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+        log.error("Ошибка валидации параметров: {}", errorMessage);
+        return new ErrorResponse("Ошибка валидации параметров", errorMessage);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e) {
+        String errorMessage = e.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                 .collect(Collectors.joining(", "));
         log.error("Ошибка валидации параметров: {}", errorMessage);
         return new ErrorResponse("Ошибка валидации параметров", errorMessage);
