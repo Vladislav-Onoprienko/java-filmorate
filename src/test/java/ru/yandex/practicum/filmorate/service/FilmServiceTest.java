@@ -109,6 +109,6 @@ class FilmServiceTest {
         Film film = new Film(1L, "Фильм", "Описание", LocalDate.now(), 100, new HashSet<>());
         filmStorage.createFilm(film);
 
-        assertThrows(ValidationException.class, () -> filmService.removeLike(1L, 1L));
+        assertThrows(NotFoundException.class, () -> filmService.removeLike(1L, 1L));
     }
 }
