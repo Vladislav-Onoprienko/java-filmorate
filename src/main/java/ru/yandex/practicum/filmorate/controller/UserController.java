@@ -50,7 +50,7 @@ public class UserController {
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
-        log.info("Запрос на создание пользователя с Email {}", user.getEmail() );
+        log.info("Запрос на создание пользователя с Email {}", user.getEmail());
         User createdUser = userService.createUser(user);
         log.info("Создан новый пользователь: ID={}, Email={}", createdUser.getId(), createdUser.getEmail());
         return createdUser;
