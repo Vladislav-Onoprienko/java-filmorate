@@ -37,7 +37,7 @@ class FilmControllerTest {
                         .contentType("application/json")
                         .content(invalidFilmJson))
                 .andExpect(status().isBadRequest()) // Ожидаем статус 400
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.message")
                         .value("Название фильма не может быть пустым"));
     }
 
@@ -50,7 +50,7 @@ class FilmControllerTest {
                         .contentType("application/json")
                         .content(invalidFilmJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.duration")
+                .andExpect(jsonPath("$.message")
                         .value("Продолжительность должна быть положительной"));
     }
 

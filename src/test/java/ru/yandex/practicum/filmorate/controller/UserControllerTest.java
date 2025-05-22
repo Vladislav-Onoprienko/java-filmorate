@@ -50,7 +50,7 @@ class UserControllerTest {
                         .contentType("application/json")
                         .content(invalidUserJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.email")
+                .andExpect(jsonPath("$.message")
                         .value("Email должен быть валидным"));
     }
 
@@ -63,7 +63,7 @@ class UserControllerTest {
                         .contentType("application/json")
                         .content(invalidUserJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.login")
+                .andExpect(jsonPath("$.message")
                         .value("Логин не может содержать пробелы"));
     }
 
