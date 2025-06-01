@@ -1,74 +1,92 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.time.LocalDate;
-
-import static org.junit.jupiter.api.Assertions.*;
-
+@SpringBootTest
+@AutoConfigureMockMvc
 class FilmControllerTest {
-    private FilmController filmController;
 
-    @BeforeEach
-    void setUp() {
-        filmController = new FilmController();
-    }
+    @Autowired
+    private MockMvc mockMvc;
 
     // Проверяет создание фильма с валидными данными
     @Test
-    void shouldCreateFilmWithValidData() {
-        Film film = new Film();
-        film.setName("Фильм");
-        film.setDescription("Описание");
-        film.setReleaseDate(LocalDate.of(2025, 1, 1));
-        film.setDuration(120);
+    void shouldCreateFilmWithValidData() throws Exception {
+        String validFilmJson = "{ \"name\": \"Фильм\", \"description\": \"Описание\", " +
+                "\"releaseDate\": \"2025-01-01\", \"duration\": 120 }";
 
-        Film createdFilm = filmController.addFilm(film);
-
-        assertNotNull(createdFilm.getId(), "Должен создаваться фильм с ID");
-        assertEquals("Фильм", createdFilm.getName(), "Название должно сохраняться");
+        mockMvc.perform(post("/films")
+                        .contentType("application/json")
+                        .content(validFilmJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Фильм"))
+                .andExpect(jsonPath("$.id").exists());
     }
 
-    // Проверяет валидацию пустого названия
+    // Проверяет что при создании фильма с пустым названием возвращается статус 400 (Bad Request)
     @Test
-    void shouldRejectFilmWithEmptyName() {
-        Film film = new Film();
-        film.setName("");
-        film.setReleaseDate(LocalDate.of(2025, 1, 1));
-        film.setDuration(120);
-
-        assertThrows(ValidationException.class,
-                () -> filmController.addFilm(film),
-                "Должна быть ошибка при пустом названии");
+    void shouldRejectFilmWithEmptyName() throws Exception {
+        String invalidFilmJson = "{ \"name\": \"\", \"releaseDate\": \"2025-01-01\", \"duration\": 120 }";
+        mockMvc.perform(post("/films")
+                        .contentType("application/json")
+                        .content(invalidFilmJson))
+                .andExpect(status().isBadRequest()) // Ожидаем статус 400
+                .andExpect(jsonPath("$.message")
+                        .value("Название фильма не может быть пустым"));
     }
 
     // Проверяет валидацию продолжительности
     @Test
-    void shouldRejectFilmWithNegativeDuration() {
-        Film film = new Film();
-        film.setName("Фильм");
-        film.setReleaseDate(LocalDate.of(2025, 1, 1));
-        film.setDuration(-1);
+    void shouldRejectFilmWithNegativeDuration() throws Exception {
+        String invalidFilmJson = "{ \"name\": \"Фильм\", \"releaseDate\": \"2025-01-01\", \"duration\": -1 }";
 
-        assertThrows(ValidationException.class,
-                () -> filmController.addFilm(film),
-                "Должна быть ошибка при отрицательной продолжительности");
+        mockMvc.perform(post("/films")
+                        .contentType("application/json")
+                        .content(invalidFilmJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Продолжительность должна быть положительной"));
     }
 
     // Проверяет обновление несуществующего фильма
     @Test
-    void shouldThrowExceptionWhenUpdatingNonExistentFilm() {
-        Film film = new Film();
-        film.setId(999L);
-        film.setName("Фильм");
-        film.setReleaseDate(LocalDate.of(2025, 1, 1));
-        film.setDuration(120);
+    void shouldThrowExceptionWhenUpdatingNonExistentFilm() throws Exception {
+        String filmJson = "{ \"id\": 999, \"name\": \"Фильм\", " +
+                "\"releaseDate\": \"2025-01-01\", \"duration\": 120 }";
 
-        assertThrows(ValidationException.class,
-                () -> filmController.updateFilm(film),
-                "Должна быть ошибка при обновлении несуществующего фильма");
+        mockMvc.perform(put("/films")
+                        .contentType("application/json")
+                        .content(filmJson))
+                .andExpect(status().isNotFound()) // Ожидаем статус 404
+                .andExpect(jsonPath("$.message")
+                        .value("Фильм с id=999 не найден"));
+    }
+
+    // Проверяет получение всех фильмов
+    @Test
+    void shouldReturnAllFilms() throws Exception {
+        mockMvc.perform(get("/films"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"));
+    }
+
+    // Проверяет получение фильма по ID после его создания
+    @Test
+    void shouldReturnFilmById() throws Exception {
+        String filmJson = "{ \"name\": \"Test\", \"description\": \"desc\", \"releaseDate\": \"2025-01-01\", \"duration\": 120 }";
+        mockMvc.perform(post("/films")
+                        .contentType("application/json")
+                        .content(filmJson))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/films/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
     }
 }
