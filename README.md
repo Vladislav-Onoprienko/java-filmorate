@@ -43,7 +43,7 @@ Template repository for Filmorate project.
 
 
 
-![Описание схемы](java-filmorate/DB-scheme.png)
+![Описание схемы](docs/images/DB-scheme.png)
 
 
 ## 📜 SQL Scripts  
