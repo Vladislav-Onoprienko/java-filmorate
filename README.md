@@ -51,22 +51,22 @@ Template repository for Filmorate project.
 ### **Создание таблиц**  
 ```sql
 CREATE TABLE mpa_ratings (
-    mpa_id INTEGER PRIMARY KEY,
+    mpa_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(10) NOT NULL
     description VARCHAR(255)
 );
 
 CREATE TABLE genres (
-    genre_id INTEGER PRIMARY KEY,
+    genre_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE films (
-    film_id INTEGER PRIMARY KEY,
+    film_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
     description VARCHAR(200),
-    release_date DATE NOT NULL,
-    duration INTEGER NOT NULL,
+    release_date DATE NOT NULL CHECK (release_date >= '1895-12-28'),
+    duration INTEGER NOT NULL CHECK (duration > 0),
     mpa_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (mpa_id) REFERENCES mpa_ratings (mpa_id)
@@ -81,7 +81,7 @@ CREATE TABLE film_genres (
 );
 
 CREATE TABLE users (
-    user_id INTEGER PRIMARY KEY,
+    user_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     email VARCHAR(255) NOT NULL,
     login VARCHAR(50) NOT NULL,
     name VARCHAR(255),
