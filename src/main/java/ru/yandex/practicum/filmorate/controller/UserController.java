@@ -72,6 +72,15 @@ public class UserController {
         log.info("Пользователи {} и {} теперь друзья", id, friendId);
     }
 
+    @PutMapping("/{userId}/friends/{friendId}/confirm")
+    public void confirmFriendship(
+            @PathVariable @Positive long userId,
+            @PathVariable @Positive long friendId) {
+        log.info("Подтверждение дружбы: {} принимает запрос от {}", userId, friendId);
+        userService.confirmFriend(userId, friendId);
+        log.info("Дружба между {} и {} подтверждена", userId, friendId);
+    }
+
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable @Positive long id, @PathVariable @Positive long friendId) {
         log.info("Запрос от пользователя с ID {} на удаление из друзей пользователя с ID {}", id, friendId);
