@@ -57,10 +57,6 @@ public class UserService {
     }
 
     public void addFriend(long userId, long friendId) {
-        if (friendshipDao.isFriendshipExists(userId, friendId)) {
-            throw new ValidationException("Запрос на дружбу уже существует");
-        }
-
         log.debug("Начало обработки добавления друга {} пользователю {}", friendId, userId);
         if (userId == friendId) {
             log.error("Попытка добавить самого себя в друзья: {}", userId);
@@ -74,7 +70,6 @@ public class UserService {
             log.warn("Пользователь {} уже в друзьях у {}", friendId, userId);
             throw new ValidationException("Запрос на дружбу уже существует");
         }
-
 
         friendshipDao.addFriendship(userId, friendId, "unconfirmed");
         log.info("Запрос на дружбу отправлен: от {} к {}", userId, friendId);

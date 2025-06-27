@@ -113,10 +113,6 @@ public class FilmDbStorage implements FilmStorage {
             throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
         }
 
-        if (isFilmExists(film.getName(), film.getId())) {
-            log.error("Попытка обновить фильм на существующее название: {}", film.getName());
-            throw new ValidationException("Фильм с таким названием уже существует");
-        }
 
         log.debug("Обновление жанров для фильма ID: {}", film.getId());
         filmGenreDao.removeGenresFromFilm(film.getId());
@@ -171,8 +167,13 @@ public class FilmDbStorage implements FilmStorage {
                         rs.getLong("mpa_id"),
                         rs.getString("mpa_name"),
                         rs.getString("mpa_description")))
-                .likesCount(rs.getInt("likes_count"))
                 .build();
+
+        try {
+            film.setLikesCount(rs.getInt("likes_count"));
+        } catch (SQLException e) {
+            film.setLikesCount(0);
+        }
 
         film.setGenres(new HashSet<>(filmGenreDao.getGenresForFilm(film.getId())));
 

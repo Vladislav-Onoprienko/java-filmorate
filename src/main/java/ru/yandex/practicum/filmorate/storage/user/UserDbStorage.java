@@ -109,6 +109,11 @@ public class UserDbStorage implements UserStorage {
         jdbcTemplate.update("DELETE FROM users");
     }
 
+    private boolean existsById(long id) {
+        String sql = "SELECT COUNT(*) FROM users WHERE user_id = ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, id) > 0;
+    }
+
     private User mapRowToUser(ResultSet rs, int rowNum) throws SQLException {
         return User.builder()
                 .id(rs.getLong("user_id"))

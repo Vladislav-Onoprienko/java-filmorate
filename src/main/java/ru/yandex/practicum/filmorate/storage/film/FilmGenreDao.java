@@ -38,7 +38,7 @@ public class FilmGenreDao {
     public List<Genre> getGenresForFilm(long filmId) {
         log.debug("Запрос жанров для фильма ID: {}", filmId);
         String sql = "SELECT g.* FROM genres g JOIN film_genres fg ON g.genre_id = fg.genre_id " +
-                "WHERE fg.film_id = ?";
+                "WHERE fg.film_id = ? " + "ORDER BY g.genre_id";
         return jdbcTemplate.query(sql, this::mapRowToGenre, filmId);
     }
 
@@ -46,12 +46,16 @@ public class FilmGenreDao {
     public void setGenresForFilm(long filmId, Set<Long> genreIds) {
         jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", filmId);
 
+        List<Long> sortedGenreIds = genreIds.stream()
+                .sorted()
+                .toList();
+
         if (!genreIds.isEmpty()) {
             jdbcTemplate.batchUpdate(
                     "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)",
-                    genreIds.stream()
+                    sortedGenreIds.stream()
                             .map(genreId -> new Object[]{filmId, genreId})
-                            .collect(Collectors.toList())
+                            .toList()
             );
         }
     }

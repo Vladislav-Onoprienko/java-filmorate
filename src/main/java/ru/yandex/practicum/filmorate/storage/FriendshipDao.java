@@ -50,18 +50,10 @@ public class FriendshipDao {
 
     public List<Long> getFriends(long userId) {
         log.debug("Запрос подтвержденных друзей пользователя ID: {}", userId);
-        String sql = "SELECT friend_id FROM friendships WHERE user_id = ? AND status = 'confirmed'";
+        String sql = "SELECT friend_id FROM friendships WHERE user_id = ?";
         List<Long> friends = jdbcTemplate.queryForList(sql, Long.class, userId);
         log.trace("Найдено {} друзей для пользователя ID: {}", friends.size(), userId);
         return friends;
-    }
-
-    public List<Long> getFriendRequests(long userId) {
-        log.debug("Запрос входящих заявок в друзья для пользователя ID: {}", userId);
-        String sql = "SELECT user_id FROM friendships WHERE friend_id = ? AND status = 'requested'";
-        List<Long> requests = jdbcTemplate.queryForList(sql, Long.class, userId);
-        log.trace("Найдено {} заявок в друзья для пользователя ID: {}", requests.size(), userId);
-        return requests;
     }
 
     public boolean isFriendshipExists(long userId, long friendId) {
@@ -70,15 +62,6 @@ public class FriendshipDao {
         int count = jdbcTemplate.queryForObject(sql, Integer.class, userId, friendId);
         boolean exists = count > 0;
         log.trace("Результат проверки дружбы {} → {}: {}", userId, friendId, exists);
-        return exists;
-    }
-
-    public boolean isFriendshipExistsWithStatus(long userId, long friendId, String status) {
-        log.debug("Проверка существования дружбы со статусом: {} → {} [{}]", userId, friendId, status);
-        String sql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ? AND status = ?";
-        int count = jdbcTemplate.queryForObject(sql, Integer.class, userId, friendId, status);
-        boolean exists = count > 0;
-        log.trace("Результат проверки: {}", exists);
         return exists;
     }
 

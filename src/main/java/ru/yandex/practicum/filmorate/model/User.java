@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,7 @@ public class User {
     @Past(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
 
+    @JsonProperty("friends")
     private Set<Long> friends = new HashSet<>();
     private LocalDateTime createdAt;
 }

@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS films (
     duration INTEGER NOT NULL CHECK (duration > 0),
     mpa_id BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT films_name_unique UNIQUE (name),
     FOREIGN KEY (mpa_id) REFERENCES mpa_ratings (mpa_id)
 );
 
@@ -50,7 +49,7 @@ CREATE TABLE IF NOT EXISTS likes (
 CREATE TABLE IF NOT EXISTS friendships (
     user_id BIGINT NOT NULL,
     friend_id BIGINT NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('unconfirmed', 'confirmed')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'confirmed')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, friend_id),
     FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
