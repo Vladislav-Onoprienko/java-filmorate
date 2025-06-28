@@ -4,17 +4,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.DAO.GenreDao;
+import ru.yandex.practicum.filmorate.storage.general.GenreRepository;
 
 import java.util.Set;
 
 @Component
 public class GenreValidator {
-    private final GenreDao genreDao;
+    private final GenreRepository genreRepository;
 
     @Autowired
-    public GenreValidator(GenreDao genreDao) {
-        this.genreDao = genreDao;
+    public GenreValidator(GenreRepository genreRepository) {
+        this.genreRepository = genreRepository;
     }
 
     public void validateForCreate(Set<Genre> genres) {
@@ -22,7 +22,7 @@ public class GenreValidator {
 
         genres.forEach(genre -> {
             validateId(genre.getId());
-            if (!genreDao.existsById(genre.getId())) {
+            if (!genreRepository.existsById(genre.getId())) {
                 throw new NotFoundException("Жанр с id=" + genre.getId() + " не найден");
             }
         });

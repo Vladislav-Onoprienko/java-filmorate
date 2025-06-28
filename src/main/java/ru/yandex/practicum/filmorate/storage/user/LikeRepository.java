@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.DAO;
+package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,11 +7,11 @@ import org.springframework.stereotype.Repository;
 
 @Slf4j
 @Repository
-public class LikeDao {
+public class LikeRepository {
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public LikeDao(JdbcTemplate jdbcTemplate) {
+    public LikeRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.DAO;
+package ru.yandex.practicum.filmorate.storage.user;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,11 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JdbcTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(LikeDao.class)
-class LikeDaoTest {
+@Import(LikeRepository.class)
+class LikeRepositoryTest {
 
     @Autowired
-    private LikeDao likeDao;
+    private LikeRepository likeRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -41,7 +41,7 @@ class LikeDaoTest {
     //Проверяет добавление лайка
     @Test
     void testAddLike() {
-        likeDao.addLike(1, 1);
+        likeRepository.addLike(1, 1);
 
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM likes WHERE film_id = 1 AND user_id = 1",
@@ -52,8 +52,8 @@ class LikeDaoTest {
     //Проверяет удаление лайка
     @Test
     void testRemoveLike() {
-        likeDao.addLike(1, 1);
-        likeDao.removeLike(1, 1);
+        likeRepository.addLike(1, 1);
+        likeRepository.removeLike(1, 1);
 
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM likes WHERE film_id = 1 AND user_id = 1",

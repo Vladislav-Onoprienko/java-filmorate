@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
-import ru.yandex.practicum.filmorate.storage.DAO.FilmGenreDao;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -25,12 +24,12 @@ import java.util.stream.Collectors;
 @Qualifier("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-    private final FilmGenreDao filmGenreDao;
+    private final FilmGenreRepository filmGenreRepository;
 
     @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate,FilmGenreDao filmGenreDao) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate, FilmGenreRepository filmGenreRepository) {
         this.jdbcTemplate = jdbcTemplate;
-        this.filmGenreDao = filmGenreDao;
+        this.filmGenreRepository = filmGenreRepository;
     }
 
     @Override
@@ -80,7 +79,7 @@ public class FilmDbStorage implements FilmStorage {
                     .map(Genre::getId)
                     .collect(Collectors.toSet());
 
-            filmGenreDao.setGenresForFilm(filmId, genreIds);
+            filmGenreRepository.setGenresForFilm(filmId, genreIds);
         }
 
         return getFilmById(filmId);
@@ -108,10 +107,10 @@ public class FilmDbStorage implements FilmStorage {
 
 
         log.debug("Обновление жанров для фильма ID: {}", film.getId());
-        filmGenreDao.removeGenresFromFilm(film.getId());
+        filmGenreRepository.removeGenresFromFilm(film.getId());
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             film.getGenres().forEach(genre ->
-                    filmGenreDao.addGenreToFilm(film.getId(), genre.getId())
+                    filmGenreRepository.addGenreToFilm(film.getId(), genre.getId())
             );
         }
 
@@ -168,7 +167,7 @@ public class FilmDbStorage implements FilmStorage {
             film.setLikesCount(0);
         }
 
-        film.setGenres(new LinkedHashSet<>(filmGenreDao.getGenresForFilm(film.getId())));
+        film.setGenres(new LinkedHashSet<>(filmGenreRepository.getGenresForFilm(film.getId())));
 
         return film;
     }

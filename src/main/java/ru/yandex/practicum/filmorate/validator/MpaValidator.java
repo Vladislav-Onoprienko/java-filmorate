@@ -4,21 +4,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 
-import ru.yandex.practicum.filmorate.storage.DAO.MpaDao;
+import ru.yandex.practicum.filmorate.storage.film.MpaRepository;
 
 
 @Component
 public class MpaValidator {
-    private final MpaDao mpaDao;
+    private final MpaRepository mpaRepository;
 
     @Autowired
-    public MpaValidator(MpaDao mpaDao) {
-        this.mpaDao = mpaDao;
+    public MpaValidator(MpaRepository mpaRepository) {
+        this.mpaRepository = mpaRepository;
     }
 
     public void validateForCreate(long mpaId) {
         validateId(mpaId);
-        if (!mpaDao.existsById(mpaId)) {
+        if (!mpaRepository.existsById(mpaId)) {
             throw new NotFoundException("MPA с id=" + mpaId + " не найден");
         }
     }

@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.DAO.LikeDao;
+import ru.yandex.practicum.filmorate.storage.user.LikeRepository;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.validator.FilmValidator;
@@ -19,7 +19,7 @@ import java.util.List;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-    private final LikeDao likeDao;
+    private final LikeRepository likeRepository;
     private final MpaValidator mpaValidator;
     private final GenreValidator genreValidator;
     private final FilmValidator filmValidator;
@@ -28,14 +28,14 @@ public class FilmService {
     @Autowired
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       LikeDao likeDao,
+                       LikeRepository likeRepository,
                        MpaValidator mpaValidator,
                        GenreValidator genreValidator,
                        FilmValidator filmValidator
     ) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
-        this.likeDao = likeDao;
+        this.likeRepository = likeRepository;
         this.mpaValidator = mpaValidator;
         this.genreValidator = genreValidator;
         this.filmValidator = filmValidator;
@@ -79,14 +79,14 @@ public class FilmService {
         log.debug("Обработка лайка. Фильм: {}, Пользователь: {}", filmId, userId);
         filmStorage.getFilmById(filmId);
         userStorage.getUserById(userId);
-        likeDao.addLike(filmId, userId);
+        likeRepository.addLike(filmId, userId);
         log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
     public void removeLike(long filmId, long userId) {
         filmStorage.getFilmById(filmId);
         userStorage.getUserById(userId);
-        likeDao.removeLike(filmId, userId);
+        likeRepository.removeLike(filmId, userId);
         log.info("Пользователь {} удалил лайк с фильма {}", userId, filmId);
     }
 

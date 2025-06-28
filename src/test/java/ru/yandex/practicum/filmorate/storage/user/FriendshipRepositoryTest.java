@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.DAO;
+package ru.yandex.practicum.filmorate.storage.user;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,11 +14,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(FriendshipDao.class)
-class FriendshipDaoTest {
+@Import(FriendshipRepository.class)
+class FriendshipRepositoryTest {
 
     @Autowired
-    private FriendshipDao friendshipDao;
+    private FriendshipRepository friendshipRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -36,48 +36,48 @@ class FriendshipDaoTest {
     // Тест добавления дружбы
     @Test
     void testAddFriendship() {
-        friendshipDao.addFriendship(1, 2, "confirmed");
+        friendshipRepository.addFriendship(1, 2, "confirmed");
 
-        assertThat(friendshipDao.isFriendshipExists(1, 2)).isTrue();
+        assertThat(friendshipRepository.isFriendshipExists(1, 2)).isTrue();
     }
 
     // Тест обновления статуса дружбы
     @Test
     void testUpdateFriendshipStatus() {
-        friendshipDao.addFriendship(1, 2, "pending");
-        friendshipDao.updateFriendshipStatus(1, 2, "confirmed");
+        friendshipRepository.addFriendship(1, 2, "pending");
+        friendshipRepository.updateFriendshipStatus(1, 2, "confirmed");
 
-        assertThat(friendshipDao.getFriends(1)).containsExactly(2L);
+        assertThat(friendshipRepository.getFriends(1)).containsExactly(2L);
     }
 
     // Тест удаления дружбы
     @Test
     void testRemoveFriendship() {
-        friendshipDao.addFriendship(1, 2, "confirmed");
-        friendshipDao.removeFriendship(1, 2);
+        friendshipRepository.addFriendship(1, 2, "confirmed");
+        friendshipRepository.removeFriendship(1, 2);
 
-        assertThat(friendshipDao.isFriendshipExists(1, 2)).isFalse();
+        assertThat(friendshipRepository.isFriendshipExists(1, 2)).isFalse();
     }
 
     // Тест получения списка друзей
     @Test
     void testGetFriends() {
-        friendshipDao.addFriendship(1, 2, "confirmed");
+        friendshipRepository.addFriendship(1, 2, "confirmed");
 
-        List<Long> friends = friendshipDao.getFriends(1);
+        List<Long> friends = friendshipRepository.getFriends(1);
         assertThat(friends).containsExactly(2L);
     }
 
     // Тест подтверждения дружбы
     @Test
     void testConfirmFriendship() {
-        friendshipDao.addFriendship(1, 2, "unconfirmed");
+        friendshipRepository.addFriendship(1, 2, "unconfirmed");
 
-        assertThat(friendshipDao.getFriends(1)).containsExactly(2L);
+        assertThat(friendshipRepository.getFriends(1)).containsExactly(2L);
 
-        friendshipDao.confirmFriendship(2, 1);
+        friendshipRepository.confirmFriendship(2, 1);
 
-        assertThat(friendshipDao.getFriends(1)).containsExactly(2L);
+        assertThat(friendshipRepository.getFriends(1)).containsExactly(2L);
 
         String status = jdbcTemplate.queryForObject(
                 "SELECT status FROM friendships WHERE user_id = 1 AND friend_id = 2",

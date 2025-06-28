@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.DAO;
+package ru.yandex.practicum.filmorate.storage.film;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,11 +16,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @JdbcTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(MpaDao.class)
-class MpaDaoTest {
+@Import(MpaRepository.class)
+class MpaRepositoryTest {
 
     @Autowired
-    private MpaDao mpaDao;
+    private MpaRepository mpaRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -40,7 +40,7 @@ class MpaDaoTest {
     // Проверяет получение всех рейтингов MPA
     @Test
     void testGetAllMpaRatings() {
-        List<MpaRating> ratings = mpaDao.getAllMpaRatings();
+        List<MpaRating> ratings = mpaRepository.getAllMpaRatings();
         assertThat(ratings)
                 .hasSize(3)
                 .extracting(MpaRating::getName)
@@ -50,7 +50,7 @@ class MpaDaoTest {
     // Проверяет получение рейтинга MPA по ID
     @Test
     void testGetMpaRatingById() {
-        MpaRating rating = mpaDao.getMpaRatingById(1);
+        MpaRating rating = mpaRepository.getMpaRatingById(1);
         assertThat(rating)
                 .hasFieldOrPropertyWithValue("id", 1L)
                 .hasFieldOrPropertyWithValue("name", "G")
@@ -60,13 +60,13 @@ class MpaDaoTest {
     // Проверяет существование рейтинга MPA по ID
     @Test
     void testExistsById() {
-        assertThat(mpaDao.existsById(1)).isTrue();
-        assertThat(mpaDao.existsById(999)).isFalse();
+        assertThat(mpaRepository.existsById(1)).isTrue();
+        assertThat(mpaRepository.existsById(999)).isFalse();
     }
 
     // Проверяет обработку случая, когда рейтинг MPA не найден
     @Test
     void testGetMpaRatingByIdNotFound() {
-        assertThrows(NotFoundException.class, () -> mpaDao.getMpaRatingById(999));
+        assertThrows(NotFoundException.class, () -> mpaRepository.getMpaRatingById(999));
     }
 }

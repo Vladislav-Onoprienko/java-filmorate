@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.DAO;
+package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +13,11 @@ import java.util.List;
 
 @Slf4j
 @Repository
-public class MpaDao {
+public class MpaRepository {
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public MpaDao(JdbcTemplate jdbcTemplate) {
+    public MpaRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

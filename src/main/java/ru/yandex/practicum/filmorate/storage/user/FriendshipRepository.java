@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.DAO;
+package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,11 +9,11 @@ import java.util.List;
 
 @Slf4j
 @Repository
-public class FriendshipDao {
+public class FriendshipRepository {
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public FriendshipDao(JdbcTemplate jdbcTemplate) {
+    public FriendshipRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

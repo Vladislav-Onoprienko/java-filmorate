@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.DAO;
+package ru.yandex.practicum.filmorate.storage.general;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,11 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @JdbcTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(GenreDao.class)
-class GenreDaoTest {
+@Import(GenreRepository.class)
+class GenreRepositoryTest {
 
     @Autowired
-    private GenreDao genreDao;
+    private GenreRepository genreRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -37,7 +37,7 @@ class GenreDaoTest {
     // Проверяет получение всех жанров из базы данных
     @Test
     void testGetAllGenres() {
-        List<Genre> genres = genreDao.getAllGenres();
+        List<Genre> genres = genreRepository.getAllGenres();
         assertThat(genres)
                 .hasSize(3)
                 .extracting(Genre::getName)
@@ -47,7 +47,7 @@ class GenreDaoTest {
     // Проверяет получение жанра по его ID
     @Test
     void testGetGenreById() {
-        Genre genre = genreDao.getGenreById(1);
+        Genre genre = genreRepository.getGenreById(1);
         assertThat(genre)
                 .hasFieldOrPropertyWithValue("id", 1L)
                 .hasFieldOrPropertyWithValue("name", "Комедия");
@@ -56,13 +56,13 @@ class GenreDaoTest {
     // Проверяет существование жанра с указанным ID
     @Test
     void testExistsById() {
-        assertThat(genreDao.existsById(1)).isTrue();
-        assertThat(genreDao.existsById(999)).isFalse();
+        assertThat(genreRepository.existsById(1)).isTrue();
+        assertThat(genreRepository.existsById(999)).isFalse();
     }
 
     // Проверяет обработку случая, когда жанр с указанным ID не найден
     @Test
     void testGetGenreByIdNotFound() {
-        assertThrows(NotFoundException.class, () -> genreDao.getGenreById(999));
+        assertThrows(NotFoundException.class, () -> genreRepository.getGenreById(999));
     }
 }
