@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.film;
+package ru.yandex.practicum.filmorate.storage.DAO;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 
 @Slf4j
 @Repository
@@ -42,21 +40,27 @@ public class FilmGenreDao {
         return jdbcTemplate.query(sql, this::mapRowToGenre, filmId);
     }
 
-
     public void setGenresForFilm(long filmId, Set<Long> genreIds) {
-        jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", filmId);
+        log.debug("Начало установки жанров для фильма ID: {}", filmId);
+
+        int deletedRows = jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", filmId);
+        log.debug("Удалено {} старых жанров для фильма ID: {}", deletedRows, filmId);
 
         List<Long> sortedGenreIds = genreIds.stream()
                 .sorted()
                 .toList();
+        log.debug("Отсортированные ID жанров для добавления: {}", sortedGenreIds);
 
         if (!genreIds.isEmpty()) {
-            jdbcTemplate.batchUpdate(
+            int[] updateCounts = jdbcTemplate.batchUpdate(
                     "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)",
                     sortedGenreIds.stream()
                             .map(genreId -> new Object[]{filmId, genreId})
                             .toList()
             );
+            log.info("Добавлено {} жанров для фильма ID: {}", updateCounts.length, filmId);
+        } else {
+            log.info("Для фильма ID: {} не указано жанров (очищена связь)", filmId);
         }
     }
 

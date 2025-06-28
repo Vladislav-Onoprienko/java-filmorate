@@ -10,8 +10,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Friendship {
+
     private long userId;
+
     private long friendId;
+
     private String status;
+
     private LocalDateTime createdAt;
 }

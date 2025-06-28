@@ -36,5 +36,6 @@ public class User {
 
     @JsonProperty("friends")
     private Set<Long> friends = new HashSet<>();
+
     private LocalDateTime createdAt;
 }

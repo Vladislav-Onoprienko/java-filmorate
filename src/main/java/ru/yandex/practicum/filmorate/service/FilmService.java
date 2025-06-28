@@ -5,26 +5,40 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.LikeDao;
+import ru.yandex.practicum.filmorate.storage.DAO.LikeDao;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.validator.FilmValidator;
+import ru.yandex.practicum.filmorate.validator.GenreValidator;
+import ru.yandex.practicum.filmorate.validator.MpaValidator;
 
 import java.util.List;
 
-@Service
 @Slf4j
+@Service
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final LikeDao likeDao;
+    private final MpaValidator mpaValidator;
+    private final GenreValidator genreValidator;
+    private final FilmValidator filmValidator;
 
 
     @Autowired
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
-                       @Qualifier("userDbStorage") UserStorage userStorage, LikeDao likeDao) {
+                       @Qualifier("userDbStorage") UserStorage userStorage,
+                       LikeDao likeDao,
+                       MpaValidator mpaValidator,
+                       GenreValidator genreValidator,
+                       FilmValidator filmValidator
+    ) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.likeDao = likeDao;
+        this.mpaValidator = mpaValidator;
+        this.genreValidator = genreValidator;
+        this.filmValidator = filmValidator;
     }
 
     public List<Film> getAllFilms() {
@@ -40,6 +54,11 @@ public class FilmService {
 
     public Film createFilm(Film film) {
         log.debug("Начало создания фильма: {}", film.getName());
+
+        filmValidator.validateForCreate(film);
+        mpaValidator.validateForCreate(film.getMpa().getId());
+        genreValidator.validateForCreate(film.getGenres());
+
         Film createdFilm = filmStorage.createFilm(film);
         log.info("Успешно создан фильм ID: {}, Название: {}", createdFilm.getId(), createdFilm.getName());
         return createdFilm;
@@ -47,6 +66,10 @@ public class FilmService {
 
     public Film updateFilm(Film film) {
         log.debug("Запрос на обновление фильма с ID: {}", film.getId());
+
+        filmValidator.validateForUpdate(film);
+        mpaValidator.validateForCreate(film.getMpa().getId());
+
         Film updatedFilm = filmStorage.updateFilm(film);
         log.info("Фильм обновлён: ID={}, Название={}", updatedFilm.getId(), updatedFilm.getName());
         return updatedFilm;

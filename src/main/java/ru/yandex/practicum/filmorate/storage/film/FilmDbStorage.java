@@ -8,19 +8,16 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.storage.DAO.FilmGenreDao;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -61,11 +58,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film createFilm(Film film) {
         log.info("Создание нового фильма: {}", film.getName());
-        if (isFilmExists(film.getName())) {
-            throw new ValidationException("Фильм с таким названием уже существует");
-        }
 
-        // Сохраняем фильм
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
                 "VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -127,14 +120,6 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public void clear() {
-        log.info("Очистка всех данных о фильмах");
-        jdbcTemplate.update("DELETE FROM film_genres");
-        jdbcTemplate.update("DELETE FROM likes");
-        jdbcTemplate.update("DELETE FROM films");
-    }
-
-    @Override
     public List<Film> getPopularFilms(int count) {
         log.debug("Запрос {} популярных фильмов", count);
         if (count <= 0) {
@@ -156,6 +141,14 @@ public class FilmDbStorage implements FilmStorage {
         return popularFilms;
     }
 
+    @Override
+    public void clear() {
+        log.info("Очистка всех данных о фильмах");
+        jdbcTemplate.update("DELETE FROM film_genres");
+        jdbcTemplate.update("DELETE FROM likes");
+        jdbcTemplate.update("DELETE FROM films");
+    }
+
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
         Film film = Film.builder()
                 .id(rs.getLong("film_id"))
@@ -175,24 +168,8 @@ public class FilmDbStorage implements FilmStorage {
             film.setLikesCount(0);
         }
 
-        film.setGenres(new HashSet<>(filmGenreDao.getGenresForFilm(film.getId())));
+        film.setGenres(new LinkedHashSet<>(filmGenreDao.getGenresForFilm(film.getId())));
 
         return film;
-    }
-
-    private boolean isFilmExists(String name) {
-        log.debug("Проверка существования фильма с названием '{}'", name);
-        String sql = "SELECT COUNT(*) FROM films WHERE name = ?";
-        boolean exists = jdbcTemplate.queryForObject(sql, Integer.class, name) > 0;
-        log.trace("Фильм с названием '{}' существует: {}", name, exists);
-        return exists;
-    }
-
-    private boolean isFilmExists(String name, long excludeId) {
-        log.debug("Проверка существования фильма с названием '{}' (исключая ID {})", name, excludeId);
-        String sql = "SELECT COUNT(*) FROM films WHERE name = ? AND film_id != ?";
-        boolean exists = jdbcTemplate.queryForObject(sql, Integer.class, name, excludeId) > 0;
-        log.trace("Фильм с названием '{}' (исключая ID {}) существует: {}", name, excludeId, exists);
-        return exists;
     }
 }

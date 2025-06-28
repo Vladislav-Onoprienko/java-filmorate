@@ -36,7 +36,10 @@ public class Film {
     private MpaRating mpa;
 
     private Set<Genre> genres = new HashSet<>();
+
     private Set<Long> likes = new HashSet<>();
+
     private int likesCount;
+
     private LocalDateTime createdAt;
 }
