@@ -2,22 +2,28 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.FriendshipRepository;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 public class UserService {
     private final UserStorage userStorage;
+    private final FriendshipRepository friendshipRepository;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, FriendshipRepository friendshipRepository) {
         this.userStorage = userStorage;
+        this.friendshipRepository = friendshipRepository;
     }
 
     public List<User> getAllUsers() {
@@ -58,51 +64,62 @@ public class UserService {
             throw new ValidationException("Нельзя добавить самого себя в друзья");
         }
 
-        User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendId);
+        userStorage.getUserById(userId);
+        userStorage.getUserById(friendId);
 
-        if (user.getFriends().contains(friendId)) {
-            log.warn("Попытка повторного добавления друга: пользователь {} уже имеет друга {}",
-                    userId, friendId);
-            throw new ValidationException("Пользователь уже в друзьях");
+        if (friendshipRepository.isFriendshipExists(userId, friendId)) {
+            log.warn("Пользователь {} уже в друзьях у {}", friendId, userId);
+            throw new ValidationException("Запрос на дружбу уже существует");
         }
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
-        userStorage.updateUser(user);
-        userStorage.updateUser(friend);
-        log.info("Установлена дружба между пользователями: {} и {}", userId, friendId);
+        friendshipRepository.addFriendship(userId, friendId, "unconfirmed");
+        log.info("Запрос на дружбу отправлен: от {} к {}", userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {
-        User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendId);
+        userStorage.getUserById(userId);
+        userStorage.getUserById(friendId);
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
-        userStorage.updateUser(user);
-        userStorage.updateUser(friend);
+        friendshipRepository.removeFriendship(userId, friendId);
         log.info("Пользователи {} и {} больше не друзья", userId, friendId);
     }
 
     public List<User> getFriends(long userId) {
-        User user = userStorage.getUserById(userId);
-        return user.getFriends().stream()
-                .map(userStorage::getUserById)
-                .collect(Collectors.toList());
+        log.debug("Запрос списка друзей пользователя {}", userId);
+        userStorage.getUserById(userId);
+        List<Long> friendIds = friendshipRepository.getFriends(userId);
+        return userStorage.getUsersByIds(friendIds);
     }
 
     public List<User> getCommonFriends(long userId, long otherUserId) {
         log.debug("Поиск общих друзей для {} и {}", userId, otherUserId);
 
-        List<User> commonFriends = userStorage.getUserById(userId).getFriends().stream()
-                .filter(userStorage.getUserById(otherUserId).getFriends()::contains)
-                .map(userStorage::getUserById)
-                .collect(Collectors.toList());
+        userStorage.getUserById(userId);
+        userStorage.getUserById(otherUserId);
 
-        log.info("Найдено {} общих друзей между {} и {}",
-                commonFriends.size(), userId, otherUserId);
+        List<Long> userFriends = friendshipRepository.getFriends(userId);
+        List<Long> otherUserFriends = friendshipRepository.getFriends(otherUserId);
 
-        return commonFriends;
+        Set<Long> commonFriendIds = userFriends.stream()
+                .filter(otherUserFriends::contains)
+                .collect(Collectors.toSet());
+
+        log.debug("Найдено {} общих друзей", commonFriendIds.size());
+        return userStorage.getUsersByIds(List.copyOf(commonFriendIds));
+    }
+
+    public void confirmFriend(long userId, long friendId) {
+        log.debug("Начало подтверждения дружбы: {} → {}", userId, friendId);
+
+        userStorage.getUserById(userId);
+        userStorage.getUserById(friendId);
+
+        if (!friendshipRepository.isFriendshipExists(friendId, userId)) {
+            log.warn("Запрос на дружбу не найден: {} → {}", friendId, userId);
+            throw new NotFoundException("Запрос на дружбу не найден");
+        }
+
+        friendshipRepository.confirmFriendship(userId, friendId);
+        log.info("Дружба подтверждена: {} ↔ {}", userId, friendId);
     }
 }
