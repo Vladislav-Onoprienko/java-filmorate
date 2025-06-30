@@ -17,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -47,6 +48,21 @@ public class UserDbStorage implements UserStorage {
                     log.error("Пользователь с id={} не найден", id);
                     return new NotFoundException("Пользователь с id=" + id + " не найден");
                 });
+    }
+
+    @Override
+    public List<User> getUsersByIds(List<Long> ids) {
+        if (ids.isEmpty()) {
+            log.debug("Запрос пользователей: передан пустой список ID");
+            return List.of();
+        }
+
+        String sql = String.format(
+                "SELECT * FROM users WHERE user_id IN (%s)",
+                ids.stream().map(String::valueOf).collect(Collectors.joining(","))
+        );
+        log.debug("Загрузка пользователей по ID: {}", ids);
+        return jdbcTemplate.query(sql, this::mapRowToUser);
     }
 
     @Override

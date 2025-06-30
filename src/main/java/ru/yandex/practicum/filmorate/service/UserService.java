@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.storage.user.FriendshipRepository;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -86,9 +87,8 @@ public class UserService {
     public List<User> getFriends(long userId) {
         log.debug("Запрос списка друзей пользователя {}", userId);
         userStorage.getUserById(userId);
-        return friendshipRepository.getFriends(userId).stream()
-                .map(userStorage::getUserById)
-                .collect(Collectors.toList());
+        List<Long> friendIds = friendshipRepository.getFriends(userId);
+        return userStorage.getUsersByIds(friendIds);
     }
 
     public List<User> getCommonFriends(long userId, long otherUserId) {
@@ -100,10 +100,12 @@ public class UserService {
         List<Long> userFriends = friendshipRepository.getFriends(userId);
         List<Long> otherUserFriends = friendshipRepository.getFriends(otherUserId);
 
-        return userFriends.stream()
+        Set<Long> commonFriendIds = userFriends.stream()
                 .filter(otherUserFriends::contains)
-                .map(userStorage::getUserById)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
+
+        log.debug("Найдено {} общих друзей", commonFriendIds.size());
+        return userStorage.getUsersByIds(List.copyOf(commonFriendIds));
     }
 
     public void confirmFriend(long userId, long friendId) {

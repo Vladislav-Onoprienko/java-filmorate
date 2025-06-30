@@ -9,7 +9,11 @@ import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -49,6 +53,25 @@ public class GenreRepository {
         boolean exists = jdbcTemplate.queryForObject(sql, Boolean.class, genreId);
         log.debug("Результат проверки жанра ID {}: {}", genreId, exists);
         return exists;
+    }
+
+    public Set<Long> getExistingGenreIds(Set<Long> genreIds) {
+        if (genreIds == null || genreIds.isEmpty()) {
+            log.debug("Запрос существующих жанров: передан пустой список ID");
+            return Collections.emptySet();
+        }
+
+        log.debug("Запрос существующих жанров из списка ID: {}", genreIds);
+        String inClause = genreIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        String sql = String.format("SELECT genre_id FROM genres WHERE genre_id IN (%s)", inClause);
+
+        Set<Long> existingIds = new HashSet<>(jdbcTemplate.queryForList(sql, Long.class));
+        log.info("Найдено {} существующих жанров из {} запрошенных", existingIds.size(), genreIds.size());
+
+        return existingIds;
     }
 
     private Genre mapRowToGenre(ResultSet rs, int rowNum) throws SQLException {

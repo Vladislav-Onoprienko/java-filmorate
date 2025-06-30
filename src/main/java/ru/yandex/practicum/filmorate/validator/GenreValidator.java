@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.general.GenreRepository;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class GenreValidator {
@@ -20,12 +21,21 @@ public class GenreValidator {
     public void validateForCreate(Set<Genre> genres) {
         if (genres == null) return;
 
-        genres.forEach(genre -> {
-            validateId(genre.getId());
-            if (!genreRepository.existsById(genre.getId())) {
-                throw new NotFoundException("Жанр с id=" + genre.getId() + " не найден");
+        genres.forEach(genre -> validateId(genre.getId()));
+
+        Set<Long> genreIds = genres.stream()
+                .map(Genre::getId)
+                .collect(Collectors.toSet());
+
+        Set<Long> existingIds = genreRepository.getExistingGenreIds(genreIds);
+
+        Set<Long> notFoundIds = genreIds.stream()
+                .filter(id -> !existingIds.contains(id))
+                .collect(Collectors.toSet());
+
+        if (!notFoundIds.isEmpty()) {
+                throw new NotFoundException("Жанры с id=" + notFoundIds + " не найдены");
             }
-        });
     }
 
     private void validateId(long genreId) {

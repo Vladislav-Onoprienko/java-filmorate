@@ -9,7 +9,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.sql.Date;
@@ -17,19 +16,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
 @Qualifier("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-    private final FilmGenreRepository filmGenreRepository;
 
     @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate, FilmGenreRepository filmGenreRepository) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.filmGenreRepository = filmGenreRepository;
     }
 
     @Override
@@ -73,15 +69,6 @@ public class FilmDbStorage implements FilmStorage {
 
         long filmId = Objects.requireNonNull(keyHolder.getKey()).longValue();
         log.info("Фильм создан. ID: {}", filmId);
-
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            Set<Long> genreIds = film.getGenres().stream()
-                    .map(Genre::getId)
-                    .collect(Collectors.toSet());
-
-            filmGenreRepository.setGenresForFilm(filmId, genreIds);
-        }
-
         return getFilmById(filmId);
     }
 
@@ -103,15 +90,6 @@ public class FilmDbStorage implements FilmStorage {
         if (updated == 0) {
             log.error("Фильм с id={} не найден для обновления", film.getId());
             throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
-        }
-
-
-        log.debug("Обновление жанров для фильма ID: {}", film.getId());
-        filmGenreRepository.removeGenresFromFilm(film.getId());
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            film.getGenres().forEach(genre ->
-                    filmGenreRepository.addGenreToFilm(film.getId(), genre.getId())
-            );
         }
 
         log.info("Фильм ID: {} успешно обновлен", film.getId());
@@ -166,9 +144,6 @@ public class FilmDbStorage implements FilmStorage {
         } catch (SQLException e) {
             film.setLikesCount(0);
         }
-
-        film.setGenres(new LinkedHashSet<>(filmGenreRepository.getGenresForFilm(film.getId())));
-
         return film;
     }
 }

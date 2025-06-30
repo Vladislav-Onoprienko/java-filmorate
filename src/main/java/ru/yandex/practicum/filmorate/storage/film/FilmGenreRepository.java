@@ -8,8 +8,8 @@ import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -38,6 +38,34 @@ public class FilmGenreRepository {
         String sql = "SELECT g.* FROM genres g JOIN film_genres fg ON g.genre_id = fg.genre_id " +
                 "WHERE fg.film_id = ? " + "ORDER BY g.genre_id";
         return jdbcTemplate.query(sql, this::mapRowToGenre, filmId);
+    }
+
+    public Map<Long, List<Genre>> getGenresForFilms(List<Long> filmIds) {
+        if (filmIds == null || filmIds.isEmpty()) {
+            log.debug("Запрос жанров для пустого списка фильмов");
+            return Collections.emptyMap();
+        }
+
+        log.debug("Запрос жанров для {} фильмов", filmIds.size());
+        String sql = "SELECT fg.film_id, g.* FROM genres g " +
+                "JOIN film_genres fg ON g.genre_id = fg.genre_id " +
+                "WHERE fg.film_id IN (%s) " +
+                "ORDER BY fg.film_id, g.genre_id";
+
+        String inClause = filmIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        Map<Long, List<Genre>> result = new HashMap<>();
+        jdbcTemplate.query(String.format(sql, inClause), rs -> {
+            long filmId = rs.getLong("film_id");
+            result.computeIfAbsent(filmId, k -> new ArrayList<>())
+                    .add(mapRowToGenre(rs, 0));
+        });
+
+        log.debug("Получено жанров для {} из {} запрошенных фильмов",
+                result.size(), filmIds.size());
+        return result;
     }
 
     public void setGenresForFilm(long filmId, Set<Long> genreIds) {
