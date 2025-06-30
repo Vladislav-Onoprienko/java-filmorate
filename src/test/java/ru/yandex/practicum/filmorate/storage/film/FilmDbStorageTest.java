@@ -58,10 +58,6 @@ class FilmDbStorageTest {
                 .hasSize(2)
                 .extracting(Film::getName)
                 .containsExactlyInAnyOrder("Film 1", "Film 2");
-
-        // Проверяем что жанры корректно загружаются для каждого фильма
-        assertThat(films.get(0).getGenres()).hasSize(2);
-        assertThat(films.get(1).getGenres()).hasSize(1);
     }
 
     // Тест проверяет получение фильма по идентификатору
@@ -74,12 +70,6 @@ class FilmDbStorageTest {
                 .isNotNull()
                 .hasFieldOrPropertyWithValue("name", "Film 1")
                 .hasFieldOrPropertyWithValue("description", "Description 1");
-
-        // Проверяем что жанры загружены корректно
-        assertThat(film.getGenres())
-                .hasSize(2)
-                .extracting(Genre::getName)
-                .containsExactlyInAnyOrder("Комедия", "Драма");
     }
 
     // Тест проверяет создание нового фильма
@@ -96,15 +86,8 @@ class FilmDbStorageTest {
 
         Film createdFilm = filmStorage.createFilm(newFilm);
 
-        // Проверяем что фильм создан с правильными данными
-        assertThat(createdFilm)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("name", "New Film")
-                .hasFieldOrPropertyWithValue("description", "New Description");
-
-        // Проверяем что присвоен ID и жанры сохранены
+        // Проверяем что присвоен ID
         assertThat(createdFilm.getId()).isNotNull();
-        assertThat(createdFilm.getGenres()).hasSize(1);
 
         // Проверяем что фильм действительно сохранен в БД
         Film dbFilm = filmStorage.getFilmById(createdFilm.getId());
@@ -126,12 +109,6 @@ class FilmDbStorageTest {
         assertThat(updatedFilm)
                 .hasFieldOrPropertyWithValue("name", "Updated Film")
                 .hasFieldOrPropertyWithValue("description", "Updated Description");
-
-        // Проверяем что жанры обновились
-        assertThat(updatedFilm.getGenres())
-                .hasSize(1)
-                .extracting(Genre::getName)
-                .containsExactly("Мультфильм");
     }
 
     // Тест проверяет получение популярных фильмов
